@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<script>
+
+var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function escapeHtml (string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
+
+function render(){
+var html = ''
+var out = ''
+for(var i=0; i<data.length; i++)
+  if(data[i]!='\n')
+    html += data[i]
+  else{
+    var line='<tr>'
+    for(var field of html.split(','))
+        line += '<td>' + escapeHtml(field) + '</td>'
+    line += '</tr>'
+    out += line
+    html = ''
+  }
+$('#content').html(out)
+}
+
+function csv2array(csv){
+var out = []
+var buffer = ''
+for(var i=0; i<csv.length; i++)
+  if(csv[i]!='\n')
+    buffer += csv[i]
+  else{
+    var line = buffer.split(',')
+    out.push(line)
+    buffer = ''
+  }
+return out
+}
+
+function array2table(array, table){
+var out = ''
+for(var row of array){
+var line='<tr>'
+for(var field of row)
+    line += '<td>' + escapeHtml(field) + '</td>'
+line += '</tr>'
+out += line
+}
+$(table).html(out)
+}
+
+var store
+
+function search_handler(){
+
+var query = $(this).val()
+
+var filtered = []
+for(var row of store){
+
+for(var column of row){
+  if(column.includes(query)){
+    filtered.push(row)
+    break
+  }
+}
+
+}
+
+array2table(filtered, '#content')
+}
+
+$(function(){
+
+$.get('csv.txt').done(function(csv){
+var array = csv2array(csv)
+store = array
+array2table(array, '#content')
+})
+
+$('#search').on('change', search_handler)
+$('#search').on('keyup', search_handler)
+
+})
+</script>
+
+<style>
+ table, th, td {
+   border: 1px solid black;
+}
+</style>
+
+<input id="search" placeholder="filter query"></input>
+<table id="content"></table>
+
+</body>
+</html>
